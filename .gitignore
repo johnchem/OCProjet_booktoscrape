@@ -1,7 +1,13 @@
 # virtual environment
+
 env/
 
 # output file
+
 *.csv
 *.jpeg
 
+# sublime text
+
+*.sublime-project
+*.sublime-workspace
