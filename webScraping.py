@@ -11,18 +11,29 @@ import csv
 
 WEBSITE = "http://books.toscrape.com/"
 TRAVEL_PAGE = "http://books.toscrape.com/catalogue/category/books/travel_2/index.html"
+SEQUENTIAL_ART_PAGE = "http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html"
 BOOK_PAGE = "http://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
-
 
 def get_main_page():
 	r = requests.get(WEBSITE)
 	print(r.text)
 
 def get_category_data(category_url):
+	# collect the raw html
 	r = requests.get(category_url)
 	r.encoding = 'utf-8'
 	soup = bs4.BeautifulSoup(r.text, 'html.parser')
 	
+	# get the number of book in the category
+	hits_result = soup.form.find("strong")
+	print(hits_result.contents[0])
+
+	# collect book data while next button exists
+	next_button = soup.find('li', class_="next")
+	print(next_button.a.attrs["href"])
+	
+
+
 	
 def get_article_data(article_url, category = None):
 	all_rating = ["one", "Two", "Three", "Four", "Five"]
@@ -119,8 +130,8 @@ def get_picture():
 
 if __name__ == '__main__':
 	#get_main_page()
-	#get_category_data(TRAVEL_PAGE)
-	output = get_article_data(BOOK_PAGE, category="travel")
-	output_file(output, "test.csv")
+	get_category_data(SEQUENTIAL_ART_PAGE)
+	#output = get_article_data(BOOK_PAGE, category="travel")
+	#output_file(output, "test.csv")
 	
 	pass
