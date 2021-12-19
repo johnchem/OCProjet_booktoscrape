@@ -36,6 +36,7 @@ def get_article_data(article_url, category = None):
 				"image_url" : None}
 	# collect the raw html
 	r = requests.get(article_url)
+	r.encoding = 'utf-8'
 	soup = bs4.BeautifulSoup(r.text, 'html.parser')
 
 	# record the category
@@ -58,6 +59,14 @@ def get_article_data(article_url, category = None):
 	result_picture = soup.find("img")
 	relative_url = result_picture.attrs["src"]
 	item_data["image_url"] = urllib.parse.urljoin(article_url, relative_url)
+
+	# get product description
+	result_desc = soup.article.find("p", class_=None)
+	item_data["product_description"] = result_desc.contents[0]
+
+	# get data from the table
+	result_table = soup.article.table
+	print(result_table)
 
 	pass
 
