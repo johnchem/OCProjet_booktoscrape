@@ -65,10 +65,35 @@ def get_article_data(article_url, category = None):
 	item_data["product_description"] = result_desc.contents[0]
 
 	# get data from the table
+	conversion_dict = {"UPC":"universal_product_code",
+						"Price (excl. tax)":"price_excluding_tax",
+						"Price (incl. tax)":"price_including_tax",
+						"Availability":"number_available"}
 	result_table = soup.article.table
-	print(result_table)
-
+	result_table_row = result_table.find_all("tr")
+	table_split = [(item.th.contents[0], item.td.contents[0]) for item in result_table_row]
+	
+	for tag, value in table_split:
+		
+		# distribute the data in the main dictionnary
+		if tag in conversion_dict:
+			
+			# take care of the special case of availability
+			if tag == "Availability":
+				new_tag = conversion_dict[tag]
+				item_data[new_tag] = convert_availability(value)
+				print(item_data[new_tag])
+			
+			# associate the other value
+			new_tag = conversion_dict[tag]
+			item_data[new_tag] = value
+			
 	pass
+
+def convert_availability(stock):
+	re_stock = re.compile(r"(\d+)")
+	value_stock = re_stock.search(stock)
+	return value_stock.group(0)
 
 def get_picture():
 	pass
@@ -78,4 +103,5 @@ if __name__ == '__main__':
 	#get_main_page()
 	#get_category_data(TRAVEL_PAGE)
 	get_article_data(BOOK_PAGE)
+	
 	pass
