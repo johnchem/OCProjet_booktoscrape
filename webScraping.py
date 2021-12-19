@@ -6,6 +6,7 @@ import os
 import re
 from pathlib import *
 import urllib
+import csv
 #import webbrowser
 
 WEBSITE = "http://books.toscrape.com/"
@@ -19,13 +20,15 @@ def get_main_page():
 
 def get_category_data(category_url):
 	r = requests.get(category_url)
-	print(r.json)
-
+	r.encoding = 'utf-8'
+	soup = bs4.BeautifulSoup(r.text, 'html.parser')
+	
+	
 def get_article_data(article_url, category = None):
 	all_rating = ["one", "Two", "Three", "Four", "Five"]
 	# initialize the item's data dictionnary
 	item_data = {"product_page_url" : None,
-				"universal_product_code(upc)" : None,
+				"universal_product_code (upc)" : None,
 				"title" : None,
 				"price_including_tax" : None,
 				"price_excluding_tax" : None,
@@ -65,7 +68,7 @@ def get_article_data(article_url, category = None):
 	item_data["product_description"] = result_desc.contents[0]
 
 	# get data from the table
-	conversion_dict = {"UPC":"universal_product_code",
+	conversion_dict = {"UPC":"universal_product_code (upc)",
 						"Price (excl. tax)":"price_excluding_tax",
 						"Price (incl. tax)":"price_including_tax",
 						"Availability":"number_available"}
@@ -82,12 +85,27 @@ def get_article_data(article_url, category = None):
 			if tag == "Availability":
 				new_tag = conversion_dict[tag]
 				item_data[new_tag] = convert_availability(value)
-				print(item_data[new_tag])
-			
-			# associate the other value
-			new_tag = conversion_dict[tag]
-			item_data[new_tag] = value
-			
+			else:
+				# associate the other value
+				new_tag = conversion_dict[tag]
+				item_data[new_tag] = value	
+	return item_data
+
+def output_file(data_dict, file_name):
+	columns = ["product_page_url",
+				"universal_product_code (upc)",
+				"title",
+				"price_including_tax",
+				"price_excluding_tax",
+				"number_available",
+				"product_description",
+				"category",
+				"review_rating",
+				"image_url"]
+	with open(file_name, "a", newline="") as fichier_csv:
+		writer = csv.DictWriter(fichier_csv, fieldnames=columns, delimiter=',')
+		writer.writeheader()
+		writer.writerow(data_dict)
 	pass
 
 def convert_availability(stock):
@@ -102,6 +120,7 @@ def get_picture():
 if __name__ == '__main__':
 	#get_main_page()
 	#get_category_data(TRAVEL_PAGE)
-	get_article_data(BOOK_PAGE)
+	output = get_article_data(BOOK_PAGE, category="travel")
+	output_file(output, "test.csv")
 	
 	pass
