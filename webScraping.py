@@ -7,7 +7,7 @@ import re
 from pathlib import *
 import urllib
 import csv
-#import webbrowser
+import webbrowser
 
 WEBSITE = "http://books.toscrape.com/"
 TRAVEL_PAGE = "http://books.toscrape.com/catalogue/category/books/travel_2/index.html"
@@ -19,24 +19,51 @@ def get_main_page():
 	print(r.text)
 
 def get_category_data(category_url):
+	# generate output variable
+	output_list = []
+
 	# collect the raw html
 	r = requests.get(category_url)
 	r.encoding = 'utf-8'
 	soup = bs4.BeautifulSoup(r.text, 'html.parser')
-	
+
+	# get category name
+	category_name = soup.find("div", class_="page-header action").h1.text
+	print(category_name)
+
 	# get the number of book in the category
 	hits_result = soup.form.find("strong")
 	print(hits_result.contents[0])
 
 	# collect book data while next button exists
 	next_button = soup.find('li', class_="next")
-	print(next_button.a.attrs["href"])
-	
+	while next_button:
+		next_url = urllib.parse.urljoin(category_url, next_button.a.attrs["href"])
+		print(next_url)
+		
+		# list of all book 
+		list_article = soup.find_all("article")
+		for article in list_article:
+			raw_url_article = article.div.a.attrs["href"]
+			url_article = urllib.parse.urljoin(category_url, raw_url_article)
+			output_list.append(get_article_data(url_article, category = category_name))
+			
+		# move to the next page
+		print("move to next page ...")
+		r = requests.get(next_url)
+		r.encoding = 'utf-8'
+		soup = bs4.BeautifulSoup(r.text, 'html.parser')
+
+		# check for next page
+		next_button = soup.find('li', class_="next")
+
+	output_file(output_list, f"{category_name}.csv")
+	quit()
 
 
 	
 def get_article_data(article_url, category = None):
-	all_rating = ["one", "Two", "Three", "Four", "Five"]
+	all_rating = ["One", "Two", "Three", "Four", "Five"]
 	# initialize the item's data dictionnary
 	item_data = {"product_page_url" : None,
 				"universal_product_code (upc)" : None,
@@ -102,7 +129,7 @@ def get_article_data(article_url, category = None):
 				item_data[new_tag] = value	
 	return item_data
 
-def output_file(data_dict, file_name):
+def output_file(data, file_name):
 	columns = ["product_page_url",
 				"universal_product_code (upc)",
 				"title",
@@ -113,11 +140,27 @@ def output_file(data_dict, file_name):
 				"category",
 				"review_rating",
 				"image_url"]
+
+	# switch to create column header if new file
+	create_header = not Path(file_name).exists()
+
+	# write the data
 	with open(file_name, "a", newline="") as fichier_csv:
 		writer = csv.DictWriter(fichier_csv, fieldnames=columns, delimiter=',')
-		writer.writeheader()
-		writer.writerow(data_dict)
-	pass
+		
+		if create_header:
+			writer.writeheader()
+		
+		# change pattern depending of 1 dict or list of dict
+		if isinstance(data, dict):
+			writer.writerow(data)
+		elif isinstance(data, list):
+			for item in data:
+				writer.writerow(item)
+		else:
+			raise Exeption("wrong output data format")
+
+	return None
 
 def convert_availability(stock):
 	re_stock = re.compile(r"(\d+)")
