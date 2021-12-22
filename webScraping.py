@@ -1,5 +1,6 @@
 #! \env\scripts\python
 # -*-coding: utf-8 -*-
+
 import requests
 import bs4
 import os
@@ -13,6 +14,8 @@ WEBSITE = "http://books.toscrape.com/"
 TRAVEL_PAGE = "http://books.toscrape.com/catalogue/category/books/travel_2/index.html"
 SEQUENTIAL_ART_PAGE = "http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html"
 BOOK_PAGE = "http://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
+WEBPAGE_ENCODING = "utf-8"
+
 
 def get_main_page():
 	r = requests.get(WEBSITE)
@@ -24,10 +27,11 @@ def get_category_data(category_url):
 
 	# collect the raw html
 	r = requests.get(category_url)
-	r.encoding = 'utf-8'
+	r.encoding = WEBPAGE_ENCODING
 	soup = bs4.BeautifulSoup(r.text, 'html.parser')
 
 	# get category name
+	print(soup.get_text())
 	category_name = soup.find("div", class_="page-header action").h1.text
 	print(category_name)
 
@@ -51,12 +55,13 @@ def get_category_data(category_url):
 		# move to the next page
 		print("move to next page ...")
 		r = requests.get(next_url)
-		r.encoding = 'utf-8'
+		r.encoding = WEBPAGE_ENCODING
 		soup = bs4.BeautifulSoup(r.text, 'html.parser')
 
 		# check for next page
 		next_button = soup.find('li', class_="next")
 
+	del_output_file(f"{category_name}.csv")
 	output_file(output_list, f"{category_name}.csv")
 	quit()
 
@@ -77,7 +82,7 @@ def get_article_data(article_url, category = None):
 				"image_url" : None}
 	# collect the raw html
 	r = requests.get(article_url)
-	r.encoding = 'utf-8'
+	r.encoding = WEBPAGE_ENCODING
 	soup = bs4.BeautifulSoup(r.text, 'html.parser')
 
 	# record the category
@@ -128,6 +133,10 @@ def get_article_data(article_url, category = None):
 				new_tag = conversion_dict[tag]
 				item_data[new_tag] = value	
 	return item_data
+
+def del_output_file(file_name):
+	os.remove(file_name)
+	print(f"{file_name} remove from directory")
 
 def output_file(data, file_name):
 	columns = ["product_page_url",
