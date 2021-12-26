@@ -6,6 +6,7 @@ import bs4
 import os
 import re
 from pathlib import *
+from PIL import Image
 import urllib
 import csv
 import webbrowser
@@ -111,10 +112,17 @@ def get_article_data(article_url, category = None):
 	raw_rating = result_rating["class"][1]
 	item_data["review_rating"] = all_rating.index(raw_rating)+1
 
-	# get the picture url
+	# get the picture url and save the picture
 	result_picture = soup.find("img")
 	relative_url = result_picture.attrs["src"]
 	item_data["image_url"] = urllib.parse.urljoin(article_url, relative_url)
+
+	# check if dorectory need to be created
+	if category :
+		dir_name = Path(category)
+		create_picture_file(dir_name)
+	picture_file_name = f'{item_data["title"]}.jpg'
+	get_picture(item_data["image_url"], picture_file_name, dir_name)
 
 	# get product description
 	result_desc = soup.article.find("p", class_=None)
@@ -187,7 +195,7 @@ def output_file(data, file_name):
 
 	return None
 
-def wrong_charact_handler(char):
+def wrong_char_handler(char):
 	pass
 
 def convert_availability(stock):
@@ -195,14 +203,31 @@ def convert_availability(stock):
 	value_stock = re_stock.search(stock)
 	return value_stock.group(0)
 
-def get_picture():
+def get_picture(image_url, name, directory):
+	img = Image.open(requests.get(image_url, stream = True).raw)
+	# check if directory is already created
+	create_picture_file(directory)
+
+	# store the file path
+	path = directory / name
+	if not path.exists():
+		try:
+			img.save(path)
+		except Exception as e:
+			logging.warning("erreur avec fichier %s : %s" % (name, e))
+	pass
+
+def create_picture_file(dir_name):
+	if not dir_name.is_dir():
+		os.mkdir(dir_name)
+		print("fichier '%s' crée" % dir_name)
 	pass
 
 
 if __name__ == '__main__':
 	#get_main_page()
-	get_category_data(ROMANCE_PAGE)
-	#output = get_article_data(BOOK_PAGE, category="travel")
+	#get_category_data(ROMANCE_PAGE)
+	output = get_article_data(BOOK_PAGE, category="travel")
 	#output_file(output, "test.csv")
 	
 	pass
