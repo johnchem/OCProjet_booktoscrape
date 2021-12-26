@@ -13,6 +13,7 @@ import webbrowser
 WEBSITE = "http://books.toscrape.com/"
 TRAVEL_PAGE = "http://books.toscrape.com/catalogue/category/books/travel_2/index.html"
 SEQUENTIAL_ART_PAGE = "http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html"
+ROMANCE_PAGE = "http://books.toscrape.com/catalogue/category/books/romance_8/index.html"
 BOOK_PAGE = "http://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
 WEBPAGE_ENCODING = "utf-8"
 
@@ -31,7 +32,6 @@ def get_category_data(category_url):
 	soup = bs4.BeautifulSoup(r.text, 'html.parser')
 
 	# get category name
-	print(soup.get_text())
 	category_name = soup.find("div", class_="page-header action").h1.text
 	print(category_name)
 
@@ -39,34 +39,44 @@ def get_category_data(category_url):
 	hits_result = soup.form.find("strong")
 	print(hits_result.contents[0])
 
-	# collect book data while next button exists
-	next_button = soup.find('li', class_="next")
-	while next_button:
-		next_url = urllib.parse.urljoin(category_url, next_button.a.attrs["href"])
-		print(next_url)
-		
+	
+	# incremental number 
+	i = 0
+	# loop control 
+	pursue_scraping = True
+
+	while pursue_scraping:	
 		# list of all book 
 		list_article = soup.find_all("article")
 		for article in list_article:
+			i+=1
+			title = article.h3.a.attrs["title"]
+			print(f"{i} - {title}")
 			raw_url_article = article.div.a.attrs["href"]
 			url_article = urllib.parse.urljoin(category_url, raw_url_article)
 			output_list.append(get_article_data(url_article, category = category_name))
-			
-		# move to the next page
-		print("move to next page ...")
-		r = requests.get(next_url)
-		r.encoding = WEBPAGE_ENCODING
-		soup = bs4.BeautifulSoup(r.text, 'html.parser')
-
-		# check for next page
+	
+		# collect book data while next button exists
 		next_button = soup.find('li', class_="next")
+		
+		if next_button:
+			pursue_scraping = True
 
+			# move to the next page
+			next_url = urllib.parse.urljoin(category_url, next_button.a.attrs["href"])
+			print("move to next page ...")
+			print(next_url)
+			r = requests.get(next_url)
+			r.encoding = WEBPAGE_ENCODING
+			soup = bs4.BeautifulSoup(r.text, 'html.parser')
+		
+		else:
+			pursue_scraping = False
+		
 	del_output_file(f"{category_name}.csv")
 	output_file(output_list, f"{category_name}.csv")
 	quit()
 
-
-	
 def get_article_data(article_url, category = None):
 	all_rating = ["One", "Two", "Three", "Four", "Five"]
 	# initialize the item's data dictionnary
@@ -135,8 +145,11 @@ def get_article_data(article_url, category = None):
 	return item_data
 
 def del_output_file(file_name):
-	os.remove(file_name)
-	print(f"{file_name} remove from directory")
+	if Path(file_name).is_file():
+		os.remove(file_name)
+		print(f"{file_name} remove from directory")
+	else :
+		print("the file doesn't exists yet.")
 
 def output_file(data, file_name):
 	columns = ["product_page_url",
@@ -168,8 +181,14 @@ def output_file(data, file_name):
 				writer.writerow(item)
 		else:
 			raise Exeption("wrong output data format")
+	
+		fichier_csv.close()
+	print(f"{file_name} created")
 
 	return None
+
+def wrong_charact_handler(char):
+	pass
 
 def convert_availability(stock):
 	re_stock = re.compile(r"(\d+)")
@@ -182,7 +201,7 @@ def get_picture():
 
 if __name__ == '__main__':
 	#get_main_page()
-	get_category_data(SEQUENTIAL_ART_PAGE)
+	get_category_data(ROMANCE_PAGE)
 	#output = get_article_data(BOOK_PAGE, category="travel")
 	#output_file(output, "test.csv")
 	
