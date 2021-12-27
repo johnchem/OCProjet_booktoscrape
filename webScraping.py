@@ -21,7 +21,7 @@ WEBPAGE_ENCODING = "utf-8"
 
 def get_main_page():
 	r = requests.get(WEBSITE)
-	print(r.text)
+	
 
 def get_category_data(category_url):
 	# generate output variable
@@ -205,21 +205,25 @@ def convert_availability(stock):
 
 def get_picture(image_url, name, directory):
 	img = Image.open(requests.get(image_url, stream = True).raw)
+	dir_path = Path("picture") / directory
+
 	# check if directory is already created
-	create_picture_file(directory)
+	create_picture_file(dir_path)
 
 	# store the file path
-	path = directory / name
-	if not path.exists():
+	picture_path = dir_path / name
+	print(picture_path)
+	if not picture_path.exists():
 		try:
-			img.save(path)
+			img.save(picture_path)
 		except Exception as e:
-			logging.warning("erreur avec fichier %s : %s" % (name, e))
+			print("erreur avec fichier %s : %s" % (name, e))
 	pass
 
 def create_picture_file(dir_name):
+	print(dir_name)
 	if not dir_name.is_dir():
-		os.mkdir(dir_name)
+		os.makedirs(dir_name)
 		print("fichier '%s' crée" % dir_name)
 	pass
 

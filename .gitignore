@@ -3,9 +3,9 @@
 env/
 
 # output file
-
+picture/
 *.csv
-*.jpeg
+*.jpg
 
 # sublime text
 
