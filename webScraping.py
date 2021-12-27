@@ -19,9 +19,18 @@ BOOK_PAGE = "http://books.toscrape.com/catalogue/its-only-the-himalayas_981/inde
 WEBPAGE_ENCODING = "utf-8"
 
 
-def get_main_page():
-	r = requests.get(WEBSITE)
-	
+def get_category_list(website):
+	r = requests.get(website)
+	r.encoding = WEBPAGE_ENCODING
+	soup = bs4.BeautifulSoup(r.text, 'html.parser')
+
+	hits_category = soup.find("div", class_="side_categories").ul.find_all("a")
+	category_list = []
+	for cat in hits_category:
+		category_name = cat.get_text().strip()
+		category_url = urllib.parse.urljoin(website, cat.attrs["href"])
+		category_list.append((category_name, category_url))
+	return category_list
 
 def get_category_data(category_url):
 	# generate output variable
@@ -34,11 +43,11 @@ def get_category_data(category_url):
 
 	# get category name
 	category_name = soup.find("div", class_="page-header action").h1.text
-	print(category_name)
+	#print(category_name)
 
 	# get the number of book in the category
 	hits_result = soup.form.find("strong")
-	print(hits_result.contents[0])
+	print(f"{hits_result.contents[0]} books in the category")
 
 	
 	# incremental number 
@@ -76,7 +85,7 @@ def get_category_data(category_url):
 		
 	del_output_file(f"{category_name}.csv")
 	output_file(output_list, f"{category_name}.csv")
-	quit()
+	return None
 
 def get_article_data(article_url, category = None):
 	all_rating = ["One", "Two", "Three", "Four", "Five"]
@@ -195,7 +204,8 @@ def output_file(data, file_name):
 
 	return None
 
-def wrong_char_handler(char):
+def wrong_char_handler(string):
+	if 
 	pass
 
 def convert_availability(stock):
@@ -205,14 +215,14 @@ def convert_availability(stock):
 
 def get_picture(image_url, name, directory):
 	img = Image.open(requests.get(image_url, stream = True).raw)
-	dir_path = Path("picture") / directory
+	dir_path = "picture" / directory
 
 	# check if directory is already created
 	create_picture_file(dir_path)
 
 	# store the file path
 	picture_path = dir_path / name
-	print(picture_path)
+	[]
 	if not picture_path.exists():
 		try:
 			img.save(picture_path)
@@ -221,7 +231,6 @@ def get_picture(image_url, name, directory):
 	pass
 
 def create_picture_file(dir_name):
-	print(dir_name)
 	if not dir_name.is_dir():
 		os.makedirs(dir_name)
 		print("fichier '%s' crée" % dir_name)
@@ -229,9 +238,15 @@ def create_picture_file(dir_name):
 
 
 if __name__ == '__main__':
-	#get_main_page()
+	category_list = get_category_list(WEBSITE)
+	for name, url in category_list:
+		if name == "Books": continue
+		print(f"next category : {name}")
+		get_category_data(url)
+	print("scrapping finished ... have a nice day !")
+	quit()
 	#get_category_data(ROMANCE_PAGE)
-	output = get_article_data(BOOK_PAGE, category="travel")
+	#output = get_article_data(BOOK_PAGE, category="travel")
 	#output_file(output, "test.csv")
 	
 	pass
