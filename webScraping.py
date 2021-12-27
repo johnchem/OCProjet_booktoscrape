@@ -121,21 +121,22 @@ def get_article_data(article_url, category = None):
 	raw_rating = result_rating["class"][1]
 	item_data["review_rating"] = all_rating.index(raw_rating)+1
 
-	# get the picture url and save the picture
+	# get the picture url
 	result_picture = soup.find("img")
 	relative_url = result_picture.attrs["src"]
 	item_data["image_url"] = urllib.parse.urljoin(article_url, relative_url)
 
-	# check if dorectory need to be created
-	if category :
-		dir_name = Path(category)
-		create_picture_file(dir_name)
+	#save the picture
+	dir_name = Path(category)
 	picture_file_name = f'{item_data["title"]}.jpg'
 	get_picture(item_data["image_url"], picture_file_name, dir_name)
 
 	# get product description
 	result_desc = soup.article.find("p", class_=None)
+	print(type(result_desc.contents[0]))
 	item_data["product_description"] = result_desc.contents[0]
+	# if '\u203d' in item_data["product_description"]:
+
 
 	# get data from the table
 	conversion_dict = {"UPC":"universal_product_code (upc)",
@@ -185,7 +186,8 @@ def output_file(data, file_name):
 
 	# write the data
 	with open(file_name, "a", newline="") as fichier_csv:
-		writer = csv.DictWriter(fichier_csv, fieldnames=columns, delimiter=',')
+		writer = csv.DictWriter(fichier_csv, fieldnames=columns, 
+											dialect='excel')
 		
 		if create_header:
 			writer.writeheader()
@@ -205,8 +207,7 @@ def output_file(data, file_name):
 	return None
 
 def wrong_char_handler(string):
-	if 
-	pass
+	return re.sub(r'[\\/*?:"<>|]',"_",string)
 
 def convert_availability(stock):
 	re_stock = re.compile(r"(\d+)")
@@ -221,6 +222,7 @@ def get_picture(image_url, name, directory):
 	create_picture_file(dir_path)
 
 	# store the file path
+	name = wrong_char_handler(name)
 	picture_path = dir_path / name
 	[]
 	if not picture_path.exists():
@@ -247,6 +249,5 @@ if __name__ == '__main__':
 	quit()
 	#get_category_data(ROMANCE_PAGE)
 	#output = get_article_data(BOOK_PAGE, category="travel")
-	#output_file(output, "test.csv")
-	
+	#output_file(output, "test.csv")	
 	pass
