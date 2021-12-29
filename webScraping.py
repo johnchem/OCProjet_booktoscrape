@@ -134,10 +134,13 @@ def get_article_data(article_url, category = None):
 
 	# get product description
 	result_desc = soup.article.find("p", class_=None)
-	description_string = result_desc.contents[0].string
+	if result_desc:
+		description_string = result_desc.contents[0].string
 
-	# handle encoding issues 
-	description_string = description_string.encode("utf-8", errors="replace")
+		# handle encoding issues 
+		description_string = description_string.encode("utf-8", errors="replace")
+	else:
+		description_string = ""
 
 	'''
 	# handle encoding issue with interrobang character

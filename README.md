@@ -12,3 +12,6 @@ Projet 2 pour la formation developpeur python d'OpenClassrooms.
 ## quitter l'environnement virtuel
 - taper la commande `deactivate`
 
+## fonctionnment avec le site http://books.toscrape.com/
+- lancer le script `python main.py` depuis l'environnement virtuel
+- la console affichera les livres extrait en temps réel
