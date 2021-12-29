@@ -15,7 +15,8 @@ WEBSITE = "http://books.toscrape.com/"
 TRAVEL_PAGE = "http://books.toscrape.com/catalogue/category/books/travel_2/index.html"
 SEQUENTIAL_ART_PAGE = "http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html"
 ROMANCE_PAGE = "http://books.toscrape.com/catalogue/category/books/romance_8/index.html"
-BOOK_PAGE = "http://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
+BOOK_PAGE_1 = "http://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
+BOOK_PAGE_CHAR_ISSUE = "http://books.toscrape.com/catalogue/ajin-demi-human-volume-1-ajin-demi-human-1_4/index.html"
 WEBPAGE_ENCODING = "utf-8"
 
 
@@ -133,10 +134,17 @@ def get_article_data(article_url, category = None):
 
 	# get product description
 	result_desc = soup.article.find("p", class_=None)
-	print(type(result_desc.contents[0]))
-	item_data["product_description"] = result_desc.contents[0]
-	# if '\u203d' in item_data["product_description"]:
+	description_string = result_desc.contents[0].string
 
+	# handle encoding issues 
+	description_string = description_string.encode("utf-8", errors="replace")
+
+	'''
+	# handle encoding issue with interrobang character
+	if u'\u203d' in description_string: 
+		description_string = description_string.replace(u'\u203d', '?')
+	'''
+	item_data["product_description"] = description_string
 
 	# get data from the table
 	conversion_dict = {"UPC":"universal_product_code (upc)",
@@ -240,6 +248,11 @@ def create_picture_file(dir_name):
 
 
 if __name__ == '__main__':
+	output = get_article_data(BOOK_PAGE_CHAR_ISSUE, "test")
+	output_file(output, "test.csv")
+	quit()
+
+
 	category_list = get_category_list(WEBSITE)
 	for name, url in category_list:
 		if name == "Books": continue
@@ -248,6 +261,5 @@ if __name__ == '__main__':
 	print("scrapping finished ... have a nice day !")
 	quit()
 	#get_category_data(ROMANCE_PAGE)
-	#output = get_article_data(BOOK_PAGE, category="travel")
 	#output_file(output, "test.csv")	
 	pass
